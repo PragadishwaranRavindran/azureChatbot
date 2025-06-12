@@ -52,8 +52,8 @@ export class MemStorage implements IStorage {
     const id = this.currentConversationId++;
     const now = new Date();
     const conversation: Conversation = {
-      ...insertConversation,
       id,
+      directLineConversationId: insertConversation.directLineConversationId || null,
       createdAt: now,
       updatedAt: now,
     };
@@ -75,8 +75,11 @@ export class MemStorage implements IStorage {
     const id = this.currentMessageId++;
     const now = new Date();
     const message: Message = {
-      ...insertMessage,
       id,
+      conversationId: insertMessage.conversationId,
+      text: insertMessage.text,
+      sender: insertMessage.sender,
+      messageType: insertMessage.messageType || 'text',
       timestamp: now,
     };
     this.messages.set(id, message);

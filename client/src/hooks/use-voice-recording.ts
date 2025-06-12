@@ -52,7 +52,12 @@ export function useVoiceRecording() {
         }
         
         // Convert to base64 and send
-        const base64Audio = btoa(String.fromCharCode(...new Uint8Array(pcm16.buffer)));
+        const uint8Array = new Uint8Array(pcm16.buffer);
+        let binaryString = '';
+        for (let i = 0; i < uint8Array.length; i++) {
+          binaryString += String.fromCharCode(uint8Array[i]);
+        }
+        const base64Audio = btoa(binaryString);
         realtimeClient.sendEvent({
           type: 'input_audio_buffer.append',
           audio: base64Audio
