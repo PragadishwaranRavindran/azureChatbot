@@ -39,6 +39,9 @@ export default function ChatInterface() {
 
   const {
     isRecording,
+    transcript,
+    assistantSpeaking,
+    assistantTranscript,
     startRecording,
     stopRecording,
     error: voiceError
@@ -230,6 +233,14 @@ export default function ChatInterface() {
       <VoiceOverlay
         isVisible={isRecording}
         onStop={stopRecording}
+      />
+
+      {/* Live Captions */}
+      <LiveCaptions
+        userTranscript={transcript}
+        assistantTranscript={assistantTranscript}
+        isUserSpeaking={isRecording && !!transcript}
+        isAssistantSpeaking={assistantSpeaking}
       />
 
       {/* Input Area */}
