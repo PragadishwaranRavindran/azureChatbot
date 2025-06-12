@@ -20,12 +20,21 @@ interface DirectLineActivity {
   text?: string;
 }
 
+interface Message {
+  id: string;
+  text: string;
+  sender: 'user' | 'assistant';
+  timestamp: Date;
+  messageType?: 'text' | 'voice';
+}
+
 export function useDirectLine() {
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [watermark, setWatermark] = useState<string>('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
@@ -80,11 +89,20 @@ export function useDirectLine() {
           // Handle new activities
           data.activities.forEach((activity: DirectLineActivity) => {
             if (activity.from.id !== 'user' && activity.type === 'message' && activity.text) {
-              // This would trigger a callback to add the message to the UI
-              // For now, we'll use a toast as a placeholder
-              toast({
-                title: "New message",
-                description: activity.text,
+              const newMessage: Message = {
+                id: activity.id || Date.now().toString(),
+                text: activity.text,
+                sender: 'assistant',
+                timestamp: new Date(activity.timestamp || Date.now()),
+                messageType: 'text'
+              };
+              
+              setMessages(prev => {
+                // Avoid duplicate messages
+                if (prev.some(msg => msg.id === newMessage.id)) {
+                  return prev;
+                }
+                return [...prev, newMessage];
               });
             }
           });
@@ -109,6 +127,17 @@ export function useDirectLine() {
     setIsLoading(true);
     setError(null);
 
+    // Add user message to the local state immediately
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      text: text,
+      sender: 'user',
+      timestamp: new Date(),
+      messageType: 'text'
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+
     try {
       await apiRequest('POST', `/api/conversations/${conversationId}/messages`, {
         text
@@ -127,6 +156,7 @@ export function useDirectLine() {
 
     try {
       await apiRequest('DELETE', `/api/conversations/${conversationId}/messages`);
+      setMessages([]);
     } catch (err) {
       console.error('Error clearing conversation:', err);
     }
@@ -137,6 +167,7 @@ export function useDirectLine() {
     isConnected,
     isLoading,
     error,
+    messages,
     sendMessage,
     clearConversation
   };

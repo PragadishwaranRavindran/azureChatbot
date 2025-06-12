@@ -19,7 +19,6 @@ interface Message {
 }
 
 export default function ChatInterface() {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
@@ -31,6 +30,7 @@ export default function ChatInterface() {
     conversationId,
     isConnected,
     isLoading,
+    messages,
     sendMessage,
     clearConversation,
     error: directLineError
@@ -95,20 +95,12 @@ export default function ChatInterface() {
   const handleSendMessage = async () => {
     if (!inputValue.trim() || !conversationId) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputValue.trim(),
-      sender: 'user',
-      timestamp: new Date(),
-      messageType: 'text'
-    };
-
-    setMessages(prev => [...prev, userMessage]);
+    const messageText = inputValue.trim();
     setInputValue("");
     setIsTyping(true);
 
     try {
-      await sendMessage(inputValue.trim());
+      await sendMessage(messageText);
       // The response will be handled by the useDirectLine hook
     } catch (error) {
       console.error('Error sending message:', error);
@@ -125,7 +117,6 @@ export default function ChatInterface() {
 
   const handleClearChat = () => {
     if (window.confirm('Are you sure you want to clear the chat history?')) {
-      setMessages([]);
       clearConversation();
     }
   };
