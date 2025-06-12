@@ -6,12 +6,15 @@ export function useVoiceRecording() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [transcript, setTranscript] = useState<string>("");
+  const [assistantSpeaking, setAssistantSpeaking] = useState(false);
+  const [assistantTranscript, setAssistantTranscript] = useState<string>("");
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const realtimeClientRef = useRef<AzureOpenAIRealtimeClient | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
+  const currentResponseRef = useRef<string | null>(null);
 
   const startRecording = useCallback(async () => {
     try {
@@ -70,6 +73,14 @@ export function useVoiceRecording() {
       // Set up event handlers
       realtimeClient.on('input_audio_buffer.speech_started', () => {
         console.log('Speech detected');
+        // If assistant is speaking, interrupt and cancel current response
+        if (assistantSpeaking) {
+          realtimeClient.sendEvent({
+            type: 'response.cancel'
+          });
+          setAssistantSpeaking(false);
+          setAssistantTranscript("");
+        }
       });
 
       realtimeClient.on('input_audio_buffer.speech_stopped', () => {
@@ -80,6 +91,7 @@ export function useVoiceRecording() {
         realtimeClient.sendEvent({
           type: 'response.create'
         });
+        setIsProcessing(true);
       });
 
       realtimeClient.on('conversation.item.input_audio_transcription.completed', (event: any) => {
@@ -88,12 +100,37 @@ export function useVoiceRecording() {
         }
       });
 
+      realtimeClient.on('response.created', (event: any) => {
+        currentResponseRef.current = event.response.id;
+        setAssistantSpeaking(true);
+        setAssistantTranscript("");
+      });
+
       realtimeClient.on('response.audio_transcript.delta', (event: any) => {
-        console.log('Response transcript:', event.delta);
+        if (event.delta) {
+          setAssistantTranscript(prev => prev + event.delta);
+        }
+      });
+
+      realtimeClient.on('response.audio.delta', (event: any) => {
+        // Audio is handled by the client library
       });
 
       realtimeClient.on('response.done', () => {
         setIsProcessing(false);
+        setAssistantSpeaking(false);
+        currentResponseRef.current = null;
+        // Keep the final transcript visible for a moment
+        setTimeout(() => {
+          setAssistantTranscript("");
+        }, 2000);
+      });
+
+      realtimeClient.on('response.cancelled', () => {
+        setIsProcessing(false);
+        setAssistantSpeaking(false);
+        setAssistantTranscript("");
+        currentResponseRef.current = null;
       });
 
       setIsRecording(true);
@@ -134,6 +171,8 @@ export function useVoiceRecording() {
     isProcessing,
     error,
     transcript,
+    assistantSpeaking,
+    assistantTranscript,
     startRecording,
     stopRecording
   };

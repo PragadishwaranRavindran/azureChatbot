@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Bot, Mic, Send, Trash2, Moon, Sun } from "lucide-react";
 import MessageBubble from "./message-bubble";
 import VoiceOverlay from "./voice-overlay";
+import LiveCaptions from "./live-captions";
 import { useDirectLine } from "@/hooks/use-direct-line";
 import { useVoiceRecording } from "@/hooks/use-voice-recording";
 
@@ -34,7 +35,7 @@ export default function ChatInterface() {
     sendMessage,
     clearConversation,
     error: directLineError
-  } = useDirectLine();
+  } = useDirectLine((typing) => setIsTyping(typing));
 
   const {
     isRecording,

@@ -28,7 +28,7 @@ interface Message {
   messageType?: 'text' | 'voice';
 }
 
-export function useDirectLine() {
+export function useDirectLine(onTypingChange?: (typing: boolean) => void) {
   const [conversationId, setConversationId] = useState<number | null>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -104,6 +104,11 @@ export function useDirectLine() {
                 }
                 return [...prev, newMessage];
               });
+              
+              // Stop typing indicator when assistant responds
+              if (onTypingChange) {
+                onTypingChange(false);
+              }
             }
           });
         }
