@@ -33,7 +33,7 @@ export class AzureOpenAIRealtimeClient {
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      const wsUrl = `wss://${this.config.endpoint.replace('https://', '')}/openai/realtime?api-version=2024-10-01-preview&deployment=${this.config.deployment}`;
+      const wsUrl = `wss://${this.config.endpoint.replace('https://', '')}/openai/realtime?api-version=2025-04-01-preview&deployment=${this.config.deployment}`;
       
       this.ws = new WebSocket(wsUrl, {
         headers: {
@@ -76,7 +76,7 @@ export class AzureOpenAIRealtimeClient {
       type: 'session.update',
       session: {
         modalities: ['text', 'audio'],
-        instructions: 'You are a helpful AI assistant. Use the provided Azure Search knowledge base to answer questions accurately.',
+        instructions: 'You are a helpful AI assistant. Use the provided Azure Search knowledge base to answer questions accurately. You should only use the knowledge base for information retrieval. If you cannot find relevant information, respond with I dont know',
         voice: this.config.voiceChoice,
         input_audio_format: 'pcm16',
         output_audio_format: 'pcm16',
@@ -84,7 +84,7 @@ export class AzureOpenAIRealtimeClient {
           model: 'whisper-1'
         },
         turn_detection: {
-          type: 'server_vad',
+          type: 'semantic_vad',
           threshold: 0.5,
           prefix_padding_ms: 300,
           silence_duration_ms: 200
@@ -170,7 +170,7 @@ export class AzureOpenAIRealtimeClient {
   }
 
   private async searchKnowledgeBase(query: string) {
-    const searchUrl = `${this.config.searchEndpoint}/indexes/${this.config.searchIndex}/docs/search?api-version=2023-11-01`;
+    const searchUrl = `${this.config.searchEndpoint}/indexes/${this.config.searchIndex}/docs/search?api-version=2024-07-01`;
     
     const searchBody = {
       search: query,

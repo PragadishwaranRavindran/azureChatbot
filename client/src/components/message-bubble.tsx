@@ -1,3 +1,5 @@
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 interface Message {
   id: string;
   text: string;
@@ -20,8 +22,8 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
     return (
       <div className="flex justify-end animate-slide-up">
         <div className="user-message rounded-2xl rounded-br-md px-4 py-3 max-w-xs lg:max-w-md">
-          <p className="text-sm text-white">{message.text}</p>
-          <div className="text-xs opacity-75 mt-1 text-white/75">{timestamp}</div>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>  
+        <div className="text-xs opacity-75 mt-1 text-white/75">{timestamp}</div>
         </div>
       </div>
     );
@@ -30,7 +32,9 @@ export default function MessageBubble({ message }: MessageBubbleProps) {
   return (
     <div className="flex justify-start animate-slide-up">
       <div className="assistant-message rounded-2xl rounded-bl-md px-4 py-3 max-w-xs lg:max-w-md shadow-sm">
-        <p className="text-sm text-card-foreground">{message.text}</p>
+        <div className="prose prose-sm dark:prose-invert text-card-foreground">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.text}</ReactMarkdown>
+        </div>
         <div className="text-xs text-muted-foreground mt-1">{timestamp}</div>
       </div>
     </div>
