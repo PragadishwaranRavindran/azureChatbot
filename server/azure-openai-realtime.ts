@@ -71,12 +71,15 @@ export class AzureOpenAIRealtimeClient {
 
   private sendSessionUpdate() {
     if (!this.ws) return;
-
+    console.log('Sending session update to Azure OpenAI Realtime WebSocket');
     const sessionUpdate = {
       type: 'session.update',
       session: {
         modalities: ['text', 'audio'],
-        instructions: 'You are a helpful AI assistant. Use the provided Azure Search knowledge base to answer questions accurately. You should only use the knowledge base for information retrieval. If you cannot find relevant information, respond with I dont know',
+        instructions: `You are a helpful AI assistant.
+        You MUST use the tool 'search_knowledge_base' to answer any question that requires factual information or specific details. 
+        NEVER answer directly unless the tool is called first and the result is available.
+        If the tool response is empty or no relevant result is found, respond only with: "I don't know".`,
         voice: this.config.voiceChoice,
         input_audio_format: 'pcm16',
         output_audio_format: 'pcm16',
@@ -130,13 +133,15 @@ export class AzureOpenAIRealtimeClient {
   }
 
   private handleEvent(event: RealtimeEvent) {
+    console.log("Received event:", event.type);
+
     const handlers = this.eventHandlers.get(event.type);
     if (handlers) {
       handlers.forEach(handler => handler(event));
     }
 
-    // Handle tool calls for Azure Search
     if (event.type === 'response.function_call_arguments.done') {
+      console.log("Tool call received:", event);
       this.handleFunctionCall(event);
     }
   }

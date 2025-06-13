@@ -10,6 +10,7 @@ import VoiceOverlay from "./voice-overlay";
 import LiveCaptions from "./live-captions";
 import { useDirectLine } from "@/hooks/use-direct-line";
 import { useVoiceRecording } from "@/hooks/use-voice-recording";
+import { log } from "console";
 
 interface Message {
   id: string;
@@ -131,6 +132,7 @@ export default function ChatInterface() {
   };
 
   const handleVoiceToggle = () => {
+    console.log("Voice toggle clicked");
     if (isRecording) {
       stopRecording();
     } else {
